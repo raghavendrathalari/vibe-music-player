@@ -395,7 +395,8 @@ function Admin() {
 
                 {song.image ? (
                   <img
-                    src={`${API}${song.image}`}
+                    src={`${API_URL}${song.image}`}
+                  
                     alt={song.title}
                     className="h-14 w-14 rounded-lg object-cover"
                   />
