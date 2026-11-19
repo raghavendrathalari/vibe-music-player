@@ -1,7 +1,8 @@
 
 import axios from "axios";
 
-const API = "http://localhost:3000/api/playlists";
+import API_URL from "../config";
+
 
 function getConfig() {
   const token = localStorage.getItem("token");
@@ -16,7 +17,7 @@ function getConfig() {
 // Get logged-in user's playlists
 export async function getPlaylists() {
   const response = await axios.get(
-    `${API}/my-playlists`,
+    `${API_URL}/api/playlists/my-playlists`,
     getConfig()
   );
 
@@ -26,7 +27,7 @@ export async function getPlaylists() {
 // Create a playlist
 export async function createPlaylist(name) {
   const response = await axios.post(
-    `${API}/create`,
+    `${API_URL}/api/playlists/create`,
     { name },
     getConfig()
   );

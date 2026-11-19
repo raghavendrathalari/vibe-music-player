@@ -39,7 +39,7 @@ function Footer({ setActivePage = () => {} }) {
             {/* SOCIAL LINKS */}
             <div className="mt-5 flex gap-5">
               <a
-                href="https://www.instagram.com/YOUR_USERNAME/"
+                href="https://www.instagram.com/raghavendra.6125/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
@@ -49,7 +49,7 @@ function Footer({ setActivePage = () => {} }) {
               </a>
 
               <a
-                href="https://wa.me/91XXXXXXXXXX"
+                href="https://wa.me/916302562173"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="WhatsApp"

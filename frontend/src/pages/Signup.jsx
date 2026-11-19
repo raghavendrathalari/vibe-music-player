@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import API_URL from "../config";
 
-const API = "http://localhost:3000";
 
 function Signup() {
   const navigate = useNavigate();
@@ -37,7 +37,7 @@ function Signup() {
       setLoading(true);
 
       const res = await axios.post(
-        `${API}/api/auth/signup`,
+        `${API_URL}/api/auth/signup`,
         form
       );
 

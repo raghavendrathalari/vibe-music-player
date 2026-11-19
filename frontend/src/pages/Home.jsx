@@ -1,5 +1,6 @@
 
-import SongCard from "../components/SongCard";
+
+import SongCard from "../components/Songcard";
 
 function Home({
   songs = [],
@@ -23,9 +24,9 @@ function Home({
   return (
     <div className="p-6">
 
-      {/* <h1 className="text-xl font-bold text-white mb-3">
+      <h1 className="text-xl font-bold text-white mb-3">
         Discover Music
-      </h1> */}
+      </h1>
 
       <h2 className="text-xl font-semibold text-white mb-1">
         {search ? "Search Results" : "All Songs"}

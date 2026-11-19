@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Play, Heart, ListPlus } from "lucide-react";
 
-const API = "http://localhost:3000";
+import API_URL from "../config";
 
 function SongCard({
   song,
@@ -20,11 +20,11 @@ function SongCard({
     (item) => item._id === song._id
   );
 
-  // Correct image URL
+  // Image URL
   const imageUrl = song.image
     ? song.image.startsWith("http")
       ? song.image
-      : `${API}/${song.image.replace(/^\/+/, "")}`
+      : `${API_URL}/${song.image.replace(/^\/+/, "")}`
     : "/default-song.png";
 
   // Add song to playlist
@@ -37,7 +37,6 @@ function SongCard({
       await onAddToPlaylist?.(playlistId, song._id);
 
       setShowPlaylists(false);
-
     } catch (error) {
       console.error("Playlist error:", error);
     } finally {
@@ -50,7 +49,6 @@ function SongCard({
 
       {/* SONG IMAGE */}
       <div className="relative">
-
         <img
           src={imageUrl}
           alt={song.title || "Song"}
@@ -70,12 +68,10 @@ function SongCard({
         >
           <Play size={20} />
         </button>
-
       </div>
 
       {/* SONG DETAILS */}
       <div className="flex justify-between items-center mt-3">
-
         <div className="min-w-0">
           <h3 className="font-semibold text-white truncate">
             {song.title}
@@ -94,18 +90,14 @@ function SongCard({
         >
           <Heart
             size={24}
-            className={
-              isLiked ? "text-red-500" : "text-gray-400"
-            }
+            className={isLiked ? "text-red-500" : "text-gray-400"}
             fill={isLiked ? "red" : "none"}
           />
         </button>
-
       </div>
 
       {/* ADD TO PLAYLIST */}
       <div className="relative mt-4">
-
         <button
           onClick={() => setShowPlaylists(!showPlaylists)}
           className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition"
@@ -116,13 +108,9 @@ function SongCard({
 
         {/* PLAYLIST DROPDOWN */}
         {showPlaylists && (
-
           <div className="mt-2 bg-gray-900 rounded-lg p-2">
-
             {playlists.length > 0 ? (
-
               playlists.map((playlist) => (
-
                 <button
                   key={playlist._id}
                   disabled={adding}
@@ -133,23 +121,15 @@ function SongCard({
                 >
                   {adding ? "Adding..." : playlist.name}
                 </button>
-
               ))
-
             ) : (
-
               <p className="text-gray-400 text-sm p-2">
                 No playlists found. Create a playlist first.
               </p>
-
             )}
-
           </div>
-
         )}
-
       </div>
-
     </div>
   );
 }

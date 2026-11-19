@@ -30,7 +30,7 @@ import MusicPlayer from "./components/MusicPlayer";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
-const API = "http://localhost:3000";
+import API_URL from "./config";
 
 // =====================================
 // MUSIC APP
@@ -108,7 +108,7 @@ function MusicApp() {
     async function fetchSongs() {
       try {
         const res = await axios.get(
-          `${API}/api/songs/all-songs`,
+          `${API_URL}/api/songs/all-songs`,
           { timeout: 12000 }
         );
 
@@ -158,7 +158,7 @@ function MusicApp() {
 
     try {
       const res = await axios.get(
-        `${API}/api/playlists/my-playlists`,
+        `${API_URL}/api/playlists/my-playlists`,
         getConfig()
       );
 
@@ -220,7 +220,7 @@ function MusicApp() {
   async function createPlaylist(name) {
     try {
       const res = await axios.post(
-        `${API}/api/playlists/create`,
+        `${API_URL}/api/playlists/create`,
         { name },
         getConfig()
       );
@@ -251,7 +251,7 @@ function MusicApp() {
   async function addToPlaylist(playlistId, songId) {
     try {
       const res = await axios.post(
-        `${API}/api/playlists/add-song`,
+        `${API_URL}/api/playlists/add-song`,
         { playlistId, songId },
         getConfig()
       );

@@ -8,7 +8,7 @@ import {
   Volume2
 } from "lucide-react";
 
-const API_URL = "http://localhost:3000";
+import API_URL from "../config";
 
 function getFileUrl(file) {
   if (!file) return "";
@@ -28,35 +28,33 @@ function MusicPlayer({ song, onNext, onPrevious }) {
 
   const audioUrl = getFileUrl(song?.audio);
 
-useEffect(() => {
-  const audio = audioRef.current;
-  if (!audio) return;
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
-  audio.pause();
-  audio.currentTime = 0;
+    audio.pause();
+    audio.currentTime = 0;
 
-  setPlaying(false);
-  setCurrentTime(0);
-  setDuration(0);
+    setPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
 
-  if (!audioUrl) {
-    audio.removeAttribute("src");
+    if (!audioUrl) {
+      audio.removeAttribute("src");
+      audio.load();
+      return;
+    }
+
+    audio.src = audioUrl;
     audio.load();
-    return;
-  }
 
-  audio.src = audioUrl;
-  audio.load();
+    audio.play()
+      .then(() => setPlaying(true))
+      .catch((error) => {
+        console.error("Auto play failed:", error);
+      });
 
-  audio.play()
-    .then(() => {
-      setPlaying(true);
-    })
-    .catch((error) => {
-      console.error("Auto play failed:", error);
-    });
-
-}, [audioUrl]);
+  }, [audioUrl]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -101,24 +99,24 @@ useEffect(() => {
     <div className="fixed bottom-0 left-0 right-0 h-24 bg-black border-t border-gray-800 text-white px-6 flex items-center justify-between z-50">
 
       <audio
-  ref={audioRef}
-  onTimeUpdate={(e) =>
-    setCurrentTime(e.target.currentTime)
-  }
-  onLoadedMetadata={(e) =>
-    setDuration(e.target.duration)
-  }
-  onEnded={() => {
-    setPlaying(false);
-    onNext?.();
-  }}
-  onPause={() => setPlaying(false)}
-  onPlay={() => setPlaying(true)}
-  onError={(e) => {
-    console.error("Audio error:", e.currentTarget.error);
-    console.error("Audio URL:", audioUrl);
-  }}
-/>
+        ref={audioRef}
+        onTimeUpdate={(e) =>
+          setCurrentTime(e.target.currentTime)
+        }
+        onLoadedMetadata={(e) =>
+          setDuration(e.target.duration)
+        }
+        onEnded={() => {
+          setPlaying(false);
+          onNext?.();
+        }}
+        onPause={() => setPlaying(false)}
+        onPlay={() => setPlaying(true)}
+        onError={(e) => {
+          console.error("Audio error:", e.currentTarget.error);
+          console.error("Audio URL:", audioUrl);
+        }}
+      />
 
       <div className="flex items-center gap-3 w-1/4">
         {song && (

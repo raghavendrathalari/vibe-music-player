@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { Heart, Plus, Music2, Play } from "lucide-react";
+import API_URL from "../config";
 
 function Library({
   songs = [],
@@ -52,14 +53,16 @@ function Library({
                   className="bg-gray-800 p-3 rounded-xl"
                 >
                   <img
-                    src={
-                      song.image?.startsWith("http")
-                        ? song.image
-                        : `http://localhost:3000/${song.image?.replace(/^\//, "")}`
-                    }
-                    alt={song.title}
-                    className="w-full aspect-square object-cover rounded-lg"
-                  />
+                src={
+                song.image
+              ? song.image.startsWith("http")
+              ? song.image
+              : `${API_URL}/${song.image.replace(/^\/+/, "")}`
+               : "/default-song.png"
+                }
+              alt={song.title}
+              className="w-full aspect-square rounded-lg object-cover"
+              />
 
                   <h3 className="font-semibold mt-2">
                     {song.title}

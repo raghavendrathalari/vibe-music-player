@@ -12,7 +12,7 @@ import {
   LogOut
 } from "lucide-react";
 
-const API = "http://localhost:3000";
+import API_URL from "../config";
 
 function Admin() {
   const [songs, setSongs] = useState([]);
@@ -51,7 +51,7 @@ function Admin() {
       setLoading(true);
 
       const res = await axios.get(
-        `${API}/api/songs/all-songs`
+        `${API_URL}/api/songs/all-songs`
       );
 
       setSongs(res.data.songs || []);
@@ -118,7 +118,7 @@ function Admin() {
       setProgress(0);
 
       const res = await axios.post(
-        `${API}/api/songs/add-song`,
+        `${API_URL}/api/songs/add-song`,
         formData,
         {
           headers: {
@@ -165,7 +165,7 @@ function Admin() {
 
     try {
       const res = await axios.delete(
-        `${API}/api/songs/delete-song/${id}`,
+        `${API_URL}/api/songs/delete-song/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`
