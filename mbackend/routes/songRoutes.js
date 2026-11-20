@@ -101,6 +101,10 @@ router.post(
       const imageFile = req.files?.image?.[0];
       const audioFile = req.files?.audio?.[0];
 
+      console.log("Upload directory:", uploadDir);
+      console.log("Image file:", imageFile?.path);
+      console.log("Audio file:", audioFile?.path);
+
       if (!title || !artist || !audioFile) {
         removeUploadedFiles(req.files);
 
