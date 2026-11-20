@@ -45,28 +45,37 @@ function Admin() {
     return () => URL.revokeObjectURL(preview);
   }, [form.image]);
 
-  // FETCH SONGS
-  async function fetchSongs() {
-    try {
-      setLoading(true);
+ // FETCH SONGS
+async function fetchSongs() {
+  try {
+    setLoading(true);
 
-      const res = await axios.get(
-        `${API_URL}/api/songs/all-songs`
-      );
+    const res = await axios.get(
+      `${API_URL}/api/songs/all-songs`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      }
+    );
 
-      setSongs(res.data.songs || []);
-    } catch (error) {
-      setMessage(
-        error.response?.data?.message || "Unable to load songs"
-      );
-    } finally {
-      setLoading(false);
-    }
+    setSongs(res.data.songs || []);
+
+  } catch (error) {
+    console.log("Fetch songs error:", error.response?.data || error.message);
+
+    setMessage(
+      error.response?.data?.message || "Unable to load songs"
+    );
+
+  } finally {
+    setLoading(false);
   }
+}
 
-  useEffect(() => {
-    fetchSongs();
-  }, []);
+useEffect(() => {
+  fetchSongs();
+}, []);
 
   // HANDLE TEXT INPUT
   function handleChange(e) {
