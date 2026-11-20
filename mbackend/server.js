@@ -12,24 +12,30 @@ const playlistRoutes = require("./routes/playlistRoutes");
 
 const app = express();
 
-// Middleware
+// Allowed frontend origins
 const allowedOrigins = [
   "http://localhost:5173",
-  process.env.FRONTEND_URL
-].filter(Boolean);
+  "https://vibe-music-player-sage.vercel.app"
+];
 
+// CORS Middleware
 app.use(
   cors({
     origin: (origin, callback) => {
+      // Allow requests without an origin (e.g. Postman)
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      callback(new Error("Not allowed by CORS"));
-    }
+      console.log("Blocked by CORS:", origin);
+      return callback(new Error("Not allowed by CORS"));
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 
+// Body parser
 app.use(express.json());
 
 // Serve uploaded files
@@ -54,7 +60,11 @@ const PORT = process.env.PORT || 3000;
 async function startServer() {
   try {
     if (!process.env.MONGO_URI) {
-      throw new Error("MONGO_URI is missing from .env");
+      throw new Error("MONGO_URI is missing from environment variables");
+    }
+
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is missing from environment variables");
     }
 
     await mongoose.connect(process.env.MONGO_URI);
@@ -64,6 +74,7 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
+
   } catch (error) {
     console.error("Server startup error:", error.message);
     process.exit(1);
