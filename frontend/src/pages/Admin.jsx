@@ -110,17 +110,14 @@ useEffect(() => {
       return;
     }
 
+
     const formData = new FormData();
 
-    formData.append("title", form.title);
-    formData.append("artist", form.artist);
-    formData.append("album", form.album);
-
-    if (form.image) {
-      formData.append("image", form.image);
-    }
-
-    formData.append("audio", form.audio);
+  formData.append("title", title);
+  formData.append("artist", artist);
+  formData.append("album", album);
+  formData.append("image", image);
+ formData.append("audio", audio);
 
     try {
       setUploading(true);

@@ -18,14 +18,14 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 // MULTER STORAGE
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
   },
 
   filename: (req, file, cb) => {
-    const originalName = path.basename(file.originalname);
-    cb(null, originalName);
+    cb(null, path.basename(file.originalname));
   }
 });
 
