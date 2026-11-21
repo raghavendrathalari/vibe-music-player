@@ -15,6 +15,8 @@ import {
 import API_URL from "../config";
 
 function Admin() {
+  const navigate = useNavigate();
+
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -45,37 +47,32 @@ function Admin() {
     return () => URL.revokeObjectURL(preview);
   }, [form.image]);
 
- // FETCH SONGS
-async function fetchSongs() {
-  try {
-    setLoading(true);
+  // FETCH SONGS
+  async function fetchSongs() {
+    try {
+      setLoading(true);
 
-    const res = await axios.get(
-      `${API_URL}/api/songs/all-songs`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
-      }
-    );
+      const res = await axios.get(
+        `${API_URL}/api/songs/all-songs`
+      );
 
-    setSongs(res.data.songs || []);
+      setSongs(res.data.songs || []);
 
-  } catch (error) {
-    console.log("Fetch songs error:", error.response?.data || error.message);
+    } catch (error) {
+      console.log("Fetch songs error:", error.response?.data || error.message);
 
-    setMessage(
-      error.response?.data?.message || "Unable to load songs"
-    );
+      setMessage(
+        error.response?.data?.message || "Unable to load songs"
+      );
 
-  } finally {
-    setLoading(false);
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
-useEffect(() => {
-  fetchSongs();
-}, []);
+  useEffect(() => {
+    fetchSongs();
+  }, []);
 
   // HANDLE TEXT INPUT
   function handleChange(e) {
@@ -89,9 +86,15 @@ useEffect(() => {
   function handleFileChange(e) {
     const { name, files } = e.target;
 
+    const selectedFile = files[0] || null;
+
+    if (selectedFile) {
+      console.log("Selected filename:", selectedFile.name);
+    }
+
     setForm((prev) => ({
       ...prev,
-      [name]: files[0] || null
+      [name]: selectedFile
     }));
   }
 
@@ -110,14 +113,20 @@ useEffect(() => {
       return;
     }
 
-
     const formData = new FormData();
 
-  formData.append("title", title);
-  formData.append("artist", artist);
-  formData.append("album", album);
-  formData.append("image", image);
- formData.append("audio", audio);
+    // TEXT DATA
+    formData.append("title", form.title);
+    formData.append("artist", form.artist);
+    formData.append("album", form.album);
+
+    // IMAGE FILE
+    if (form.image) {
+      formData.append("image", form.image);
+    }
+
+    // AUDIO FILE
+    formData.append("audio", form.audio);
 
     try {
       setUploading(true);
@@ -142,6 +151,7 @@ useEffect(() => {
 
       setMessage(res.data.message || "Song added successfully!");
 
+      // RESET FORM
       setForm({
         title: "",
         artist: "",
@@ -155,9 +165,12 @@ useEffect(() => {
       await fetchSongs();
 
     } catch (error) {
+      console.log("Upload error:", error.response?.data || error.message);
+
       setMessage(
         error.response?.data?.message || "Failed to upload song"
       );
+
     } finally {
       setUploading(false);
     }
@@ -189,50 +202,47 @@ useEffect(() => {
     }
   }
 
-   const navigate = useNavigate();
+  // LOGOUT
+  function handleLogout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
 
-   function handleLogout() {
-   localStorage.removeItem("token");
-   localStorage.removeItem("user");
-
-   navigate("/login", { replace: true });
-   }
+    navigate("/login", { replace: true });
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 p-6 text-white md:p-10">
 
-    {/* HEADER */}
-    <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
+      {/* HEADER */}
+      <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
 
-    <div>
-    <h1 className="text-3xl font-bold text-green-400">
-      Vibe Music Admin
-    </h1>
+        <div>
+          <h1 className="text-3xl font-bold text-green-400">
+            Vibe Music Admin
+          </h1>
 
-    <p className="mt-2 text-gray-400">
-      Manage your music library
-    </p>
-    </div>
+          <p className="mt-2 text-gray-400">
+            Manage your music library
+          </p>
+        </div>
 
-    <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
 
-    <div className="flex items-center gap-2 rounded-lg bg-green-500/10 px-4 py-3 text-green-400">
-      <Music2 />
-      <span>Admin Dashboard</span>
+          <div className="flex items-center gap-2 rounded-lg bg-green-500/10 px-4 py-3 text-green-400">
+            <Music2 />
+            <span>Admin Dashboard</span>
+          </div>
 
-    </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-3 text-red-400 transition hover:bg-red-500 hover:text-white"
+          >
+            <LogOut size={20} />
+            <span>Logout</span>
+          </button>
 
-    <button
-      onClick={handleLogout}
-      className="flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-3 text-red-400 transition hover:bg-red-500 hover:text-white"
-    >
-      <LogOut size={20} />
-      <span>Logout</span>
-    </button>
-
-    </div>
-
-    </div>
+        </div>
+      </div>
 
       {/* MESSAGE */}
       {message && (
@@ -402,7 +412,6 @@ useEffect(() => {
                 {song.image ? (
                   <img
                     src={`${API_URL}${song.image}`}
-                  
                     alt={song.title}
                     className="h-14 w-14 rounded-lg object-cover"
                   />
@@ -420,6 +429,12 @@ useEffect(() => {
                   <p className="text-sm text-gray-400">
                     {song.artist} • {song.album}
                   </p>
+
+                  <audio
+                    controls
+                    src={`${API_URL}${song.audio}`}
+                    className="mt-2 w-full"
+                  />
                 </div>
 
                 <button
