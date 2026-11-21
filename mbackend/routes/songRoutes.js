@@ -6,14 +6,13 @@ const mongoose = require("mongoose");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const crypto = require("crypto");
 
 const Song = require("../models/Song");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const { adminMiddleware } = require("../middleware/authMiddleware");
 
-// CREATE UPLOADS FOLDER IF IT DOES NOT EXIST
+// CREATE UPLOADS FOLDER
 const uploadDir = path.join(__dirname, "../uploads");
 
 if (!fs.existsSync(uploadDir)) {
@@ -27,11 +26,8 @@ const storage = multer.diskStorage({
   },
 
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-
-    const filename = `${Date.now()}-${crypto.randomUUID()}${ext}`;
-
-    cb(null, filename);
+    const originalName = path.basename(file.originalname);
+    cb(null, originalName);
   }
 });
 
@@ -68,6 +64,7 @@ const fileFilter = (req, file, cb) => {
   cb(new Error("Unexpected file field"));
 };
 
+// MULTER CONFIGURATION
 const upload = multer({
   storage,
   fileFilter,
@@ -76,7 +73,7 @@ const upload = multer({
   }
 });
 
-// CLEAN UP UPLOADED FILES IF SONG SAVING FAILS
+// REMOVE UPLOADED FILES
 function removeUploadedFiles(files) {
   if (!files) return;
 
@@ -90,20 +87,26 @@ router.post(
   "/add-song",
   authMiddleware,
   adminMiddleware,
-  upload.fields([
-    { name: "image", maxCount: 1 },
-    { name: "audio", maxCount: 1 }
-  ]),
+  (req, res, next) => {
+    upload.fields([
+      { name: "image", maxCount: 1 },
+      { name: "audio", maxCount: 1 }
+    ])(req, res, (error) => {
+      if (error) {
+        return res.status(400).json({
+          message: error.message
+        });
+      }
+
+      next();
+    });
+  },
   async (req, res) => {
     try {
       const { title, artist, album, duration } = req.body;
 
       const imageFile = req.files?.image?.[0];
       const audioFile = req.files?.audio?.[0];
-
-      console.log("Upload directory:", uploadDir);
-      console.log("Image file:", imageFile?.path);
-      console.log("Audio file:", audioFile?.path);
 
       if (!title || !artist || !audioFile) {
         removeUploadedFiles(req.files);
@@ -127,7 +130,7 @@ router.post(
         duration: duration ? Number(duration) : undefined
       });
 
-      res.status(201).json({
+      return res.status(201).json({
         message: "Song added successfully",
         song: newSong
       });
@@ -135,7 +138,7 @@ router.post(
     } catch (error) {
       removeUploadedFiles(req.files);
 
-      res.status(500).json({
+      return res.status(500).json({
         message: "Error adding song",
         error: error.message
       });
@@ -148,13 +151,13 @@ router.get("/all-songs", async (req, res) => {
   try {
     const songs = await Song.find().sort({ createdAt: -1 });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Songs fetched successfully",
       songs
     });
 
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error fetching songs",
       error: error.message
     });
@@ -182,16 +185,27 @@ router.delete(
         });
       }
 
-      res.json({
+      // DELETE ASSOCIATED FILES
+      [song.image, song.audio].forEach((filePath) => {
+        if (filePath) {
+          const filename = path.basename(filePath);
+          const fullPath = path.join(uploadDir, filename);
+
+          fs.unlink(fullPath, () => {});
+        }
+      });
+
+      return res.json({
         message: "Song deleted successfully"
       });
 
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         message: error.message
       });
     }
   }
 );
 
+// EXPORT ROUTER
 module.exports = router;
