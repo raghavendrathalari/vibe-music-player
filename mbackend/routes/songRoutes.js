@@ -7,7 +7,7 @@ const fs = require("fs");
 
 const Song = require("../models/Song");
 const authMiddleware = require("../middleware/authMiddleware");
-const { adminMiddleware } = require("../middleware/adminMiddleware");
+const { adminMiddleware } = require("../middleware/authMiddleware");
 
 // UPLOAD DIRECTORY
 const uploadDir = path.join(__dirname, "../uploads");
