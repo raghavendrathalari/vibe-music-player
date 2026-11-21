@@ -1,20 +1,18 @@
 
 const express = require("express");
 const router = express.Router();
-
-const mongoose = require("mongoose");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
 const Song = require("../models/Song");
-
 const authMiddleware = require("../middleware/authMiddleware");
-const { adminMiddleware } = require("../middleware/authMiddleware");
+const { adminMiddleware } = require("../middleware/adminMiddleware");
 
-// CREATE UPLOADS FOLDER
+// UPLOAD DIRECTORY
 const uploadDir = path.join(__dirname, "../uploads");
 
+// CREATE UPLOADS FOLDER IF NOT EXISTS
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -31,76 +29,18 @@ const storage = multer.diskStorage({
   }
 });
 
-// FILE VALIDATION
-const fileFilter = (req, file, cb) => {
-  if (file.fieldname === "image") {
-    const allowedImages = [
-      "image/jpeg",
-      "image/png",
-      "image/webp"
-    ];
+// MULTER UPLOAD
+const upload = multer({ storage });
 
-    if (allowedImages.includes(file.mimetype)) {
-      return cb(null, true);
-    }
-
-    return cb(new Error("Only JPG, PNG and WEBP images are allowed"));
-  }
-
-  if (file.fieldname === "audio") {
-    const allowedAudio = [
-      "audio/mpeg",
-      "audio/mp3",
-      "audio/x-mpeg-3"
-    ];
-
-    if (allowedAudio.includes(file.mimetype)) {
-      return cb(null, true);
-    }
-
-    return cb(new Error("Only MP3 audio files are allowed"));
-  }
-
-  cb(new Error("Unexpected file field"));
-};
-
-// MULTER CONFIGURATION
-const upload = multer({
-  storage,
-  fileFilter,
-  limits: {
-    fileSize: 50 * 1024 * 1024
-  }
-});
-
-// REMOVE UPLOADED FILES
-function removeUploadedFiles(files) {
-  if (!files) return;
-
-  Object.values(files).flat().forEach((file) => {
-    fs.unlink(file.path, () => {});
-  });
-}
-
-// ADD SONG - ADMIN ONLY
+// ADD SONG
 router.post(
   "/add-song",
   authMiddleware,
   adminMiddleware,
-  (req, res, next) => {
-    upload.fields([
-      { name: "image", maxCount: 1 },
-      { name: "audio", maxCount: 1 }
-    ])(req, res, (error) => {
-      if (error) {
-        return res.status(400).json({
-          message: error.message
-        });
-      }
-
-      next();
-    });
-  },
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "audio", maxCount: 1 }
+  ]),
   async (req, res) => {
     try {
       const { title, artist, album, duration } = req.body;
@@ -109,14 +49,13 @@ router.post(
       const audioFile = req.files?.audio?.[0];
 
       if (!title || !artist || !audioFile) {
-        removeUploadedFiles(req.files);
-
         return res.status(400).json({
           message: "Title, artist and audio file are required"
         });
       }
 
-      const newSong = await Song.create({
+      // SAVE SONG IN MONGODB
+      const song = await Song.create({
         title,
         artist,
         album: album || "Unknown Album",
@@ -127,56 +66,51 @@ router.post(
 
         audio: `/uploads/${audioFile.filename}`,
 
-        duration: duration ? Number(duration) : undefined
+        duration: duration
+          ? Number(duration)
+          : undefined
       });
 
-      return res.status(201).json({
-        message: "Song added successfully",
-        song: newSong
+      res.status(201).json({
+        message: "Song uploaded successfully",
+        song
       });
 
     } catch (error) {
-      removeUploadedFiles(req.files);
+      console.error("Add song error:", error);
 
-      return res.status(500).json({
-        message: "Error adding song",
+      res.status(500).json({
+        message: "Song upload failed",
         error: error.message
       });
     }
   }
 );
 
-// GET ALL SONGS - PUBLIC
+// GET ALL SONGS
 router.get("/all-songs", async (req, res) => {
   try {
     const songs = await Song.find().sort({ createdAt: -1 });
 
-    return res.status(200).json({
-      message: "Songs fetched successfully",
+    res.status(200).json({
       songs
     });
 
   } catch (error) {
-    return res.status(500).json({
-      message: "Error fetching songs",
+    res.status(500).json({
+      message: "Unable to fetch songs",
       error: error.message
     });
   }
 });
 
-// DELETE SONG - ADMIN ONLY
+// DELETE SONG
 router.delete(
   "/delete-song/:id",
   authMiddleware,
   adminMiddleware,
   async (req, res) => {
     try {
-      if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-        return res.status(400).json({
-          message: "Invalid song ID"
-        });
-      }
-
       const song = await Song.findByIdAndDelete(req.params.id);
 
       if (!song) {
@@ -185,27 +119,17 @@ router.delete(
         });
       }
 
-      // DELETE ASSOCIATED FILES
-      [song.image, song.audio].forEach((filePath) => {
-        if (filePath) {
-          const filename = path.basename(filePath);
-          const fullPath = path.join(uploadDir, filename);
-
-          fs.unlink(fullPath, () => {});
-        }
-      });
-
-      return res.json({
+      res.status(200).json({
         message: "Song deleted successfully"
       });
 
     } catch (error) {
-      return res.status(500).json({
-        message: error.message
+      res.status(500).json({
+        message: "Unable to delete song",
+        error: error.message
       });
     }
   }
 );
 
-// EXPORT ROUTER
 module.exports = router;
