@@ -278,7 +278,7 @@ function Admin() {
             <input
               type="text"
               name="image"
-              placeholder="Example: DC-2026.jpg"
+              placeholder="Enter image name with file extention"
               value={form.image}
               onChange={handleChange}
               required
