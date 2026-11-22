@@ -299,7 +299,7 @@ function Admin() {
     <input
     type="text"
     name="image"
-    placeholder="Example: DC-2026.jpg"
+    placeholder="Example: imagename.jpg"
     value={form.image}
     onChange={handleChange}
     className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 outline-none focus:border-green-400"
