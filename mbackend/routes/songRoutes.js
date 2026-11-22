@@ -12,13 +12,11 @@ const { adminMiddleware } = require("../middleware/authMiddleware");
 // UPLOAD DIRECTORY
 const uploadDir = path.join(__dirname, "../uploads");
 
-// CREATE UPLOADS FOLDER IF NOT EXISTS
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 // MULTER STORAGE
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
@@ -29,46 +27,78 @@ const storage = multer.diskStorage({
   }
 });
 
-// MULTER UPLOAD
-const upload = multer({ storage });
+// AUDIO FILTER
+const fileFilter = (req, file, cb) => {
+  if (
+    file.fieldname === "audio" &&
+    path.extname(file.originalname).toLowerCase() === ".mp3"
+  ) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only MP3 audio files are allowed."));
+  }
+};
+
+// MULTER - AUDIO ONLY
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 50 * 1024 * 1024
+  }
+});
 
 // ADD SONG
 router.post(
   "/add-song",
   authMiddleware,
   adminMiddleware,
-  upload.fields([
-    { name: "image", maxCount: 1 },
-    { name: "audio", maxCount: 1 }
-  ]),
+  upload.single("audio"),
   async (req, res) => {
     try {
-      const { title, artist, album, duration } = req.body;
+      const { title, artist, album, image, duration } = req.body;
 
-      const imageFile = req.files?.image?.[0];
-      const audioFile = req.files?.audio?.[0];
+      const audioFile = req.file;
 
       if (!title || !artist || !audioFile) {
         return res.status(400).json({
-          message: "Title, artist and audio file are required"
+          message: "Title, artist and audio are required"
         });
       }
 
-      // SAVE SONG IN MONGODB
+      // IMAGE NAME AS TEXT
+      const imageName = image
+        ? path.basename(image.replace(/\\/g, "/").trim())
+        : "";
+
+      const imagePath = imageName
+        ? `/uploads/${imageName}`
+        : "";
+
+      // CHECK IMAGE EXISTS
+      if (
+        imageName &&
+        !fs.existsSync(path.join(uploadDir, imageName))
+      ) {
+        fs.unlinkSync(audioFile.path);
+
+        return res.status(400).json({
+          message: `Image not found: ${imageName}`
+        });
+      }
+
+      console.log("Received image:", image);
+      console.log("Saved image:", imagePath);
+      console.log("Received audio:", audioFile.filename);
+
+      // SAVE IN MONGODB
       const song = await Song.create({
-        title,
-        artist,
-        album: album || "Unknown Album",
-
-        image: imageFile
-          ? `/uploads/${imageFile.filename}`
-          : "",
-
+        title: title.trim(),
+        artist: artist.trim(),
+        album: album?.trim() || "Unknown Album",
+        image: imagePath,
         audio: `/uploads/${audioFile.filename}`,
-
-        duration: duration
-          ? Number(duration)
-          : undefined
+        duration: duration ? Number(duration) : undefined
       });
 
       res.status(201).json({
@@ -78,6 +108,10 @@ router.post(
 
     } catch (error) {
       console.error("Add song error:", error);
+
+      if (req.file?.path && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
 
       res.status(500).json({
         message: "Song upload failed",
@@ -92,9 +126,7 @@ router.get("/all-songs", async (req, res) => {
   try {
     const songs = await Song.find().sort({ createdAt: -1 });
 
-    res.status(200).json({
-      songs
-    });
+    res.status(200).json({ songs });
 
   } catch (error) {
     res.status(500).json({
