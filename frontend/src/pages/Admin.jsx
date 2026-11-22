@@ -22,7 +22,6 @@ function Admin() {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
-  const [imagePreview, setImagePreview] = useState("");
 
   const [form, setForm] = useState({
     title: "",
@@ -34,18 +33,7 @@ function Admin() {
 
   const token = localStorage.getItem("token");
 
-  // IMAGE PREVIEW
-  useEffect(() => {
-    if (!form.image) {
-      setImagePreview("");
-      return;
-    }
 
-    const preview = URL.createObjectURL(form.image);
-    setImagePreview(preview);
-
-    return () => URL.revokeObjectURL(preview);
-  }, [form.image]);
 
   // FETCH SONGS
   async function fetchSongs() {
