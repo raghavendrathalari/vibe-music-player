@@ -28,7 +28,7 @@ function Admin() {
     title: "",
     artist: "",
     album: "",
-    image: null,
+    image: "",
     audio: null
   });
 
@@ -120,10 +120,10 @@ function Admin() {
     formData.append("artist", form.artist);
     formData.append("album", form.album);
 
-    // IMAGE FILE
-    if (form.image) {
-      formData.append("image", form.image);
-    }
+    // IMAGE Name
+    
+    formData.append("image", form.image);
+    
 
     // AUDIO FILE
     formData.append("audio", form.audio);
@@ -156,7 +156,7 @@ function Admin() {
         title: "",
         artist: "",
         album: "",
-        image: null,
+        image: "",
         audio: null
       });
 
@@ -290,38 +290,21 @@ function Admin() {
             className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 outline-none focus:border-green-400"
           />
 
-          {/* IMAGE UPLOAD */}
-          <div>
-            <label className="mb-2 block text-gray-300">
-              Album Image
-            </label>
+        {/* IMAGE NAME */}
+      <div>
+     <label className="mb-2 block text-gray-300">
+       Album Image Name
+     </label>
 
-            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-gray-600 bg-gray-800 p-4 hover:border-green-400">
-              <Image className="text-green-400" />
-
-              <span className="text-gray-300">
-                {form.image
-                  ? form.image.name
-                  : "Choose JPG, PNG or WEBP image"}
-              </span>
-
-              <input
-                type="file"
-                name="image"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
-
-            {imagePreview && (
-              <img
-                src={imagePreview}
-                alt="Album preview"
-                className="mt-4 h-32 w-32 rounded-xl object-cover"
-              />
-            )}
-          </div>
+    <input
+    type="text"
+    name="image"
+    placeholder="Example: DC-2026.jpg"
+    value={form.image}
+    onChange={handleChange}
+    className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 outline-none focus:border-green-400"
+    />
+       </div>
 
           {/* AUDIO UPLOAD */}
           <div>
