@@ -27,7 +27,7 @@ function Admin() {
     title: "",
     artist: "",
     album: "",
-    image: null,
+    image: "",
     audio: null
   });
 
@@ -110,8 +110,7 @@ function Admin() {
 
     // IMAGE Name
     
-    formData.append("image", form.image);
-    
+     formData.append("image", `/uploads/${form.image}`);    
 
     // AUDIO FILE
     formData.append("audio", form.audio);
@@ -144,7 +143,7 @@ function Admin() {
         title: "",
         artist: "",
         album: "",
-        image: null,
+        image: "",
         audio: null
       });
 
