@@ -7,7 +7,6 @@ import {
   Plus,
   Trash2,
   RefreshCw,
-  Image,
   Upload,
   LogOut
 } from "lucide-react";
@@ -33,8 +32,6 @@ function Admin() {
 
   const token = localStorage.getItem("token");
 
-
-
   // FETCH SONGS
   async function fetchSongs() {
     try {
@@ -45,14 +42,9 @@ function Admin() {
       );
 
       setSongs(res.data.songs || []);
-
     } catch (error) {
-      console.log("Fetch songs error:", error.response?.data || error.message);
-
-      setMessage(
-        error.response?.data?.message || "Unable to load songs"
-      );
-
+      console.log("Fetch error:", error.response?.data || error.message);
+      setMessage("Unable to load songs");
     } finally {
       setLoading(false);
     }
@@ -62,27 +54,23 @@ function Admin() {
     fetchSongs();
   }, []);
 
-  // HANDLE TEXT INPUT
+  // TEXT INPUT
   function handleChange(e) {
+    const { name, value } = e.target;
+
     setForm((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
     }));
   }
 
-  // HANDLE FILE INPUT
+  // AUDIO INPUT
   function handleFileChange(e) {
-    const { name, files } = e.target;
-
-    const selectedFile = files[0] || null;
-
-    if (selectedFile) {
-      console.log("Selected filename:", selectedFile.name);
-    }
+    const file = e.target.files[0] || null;
 
     setForm((prev) => ({
       ...prev,
-      [name]: selectedFile
+      audio: file
     }));
   }
 
@@ -96,6 +84,11 @@ function Admin() {
       return;
     }
 
+    if (!form.image.trim()) {
+      setMessage("Please enter the image filename.");
+      return;
+    }
+
     if (!form.audio) {
       setMessage("Please select an MP3 audio file.");
       return;
@@ -103,14 +96,18 @@ function Admin() {
 
     const formData = new FormData();
 
-    // TEXT DATA
-    formData.append("title", form.title);
-    formData.append("artist", form.artist);
-    formData.append("album", form.album);
+    // TEXT FIELDS
+    formData.append("title", form.title.trim());
+    formData.append("artist", form.artist.trim());
+    formData.append("album", form.album.trim());
 
-    // IMAGE Name
-    
-     formData.append("image", `/uploads/${form.image}`);    
+    // IMAGE PATH AS TEXT
+    const imageName = form.image.trim()
+      .replace(/\\/g, "/")
+      .replace(/^\/?uploads\//, "")
+      .replace(/^\/+/, "");
+
+    formData.append("image", `/uploads/${imageName}`);
 
     // AUDIO FILE
     formData.append("audio", form.audio);
@@ -138,7 +135,6 @@ function Admin() {
 
       setMessage(res.data.message || "Song added successfully!");
 
-      // RESET FORM
       setForm({
         title: "",
         artist: "",
@@ -152,12 +148,14 @@ function Admin() {
       await fetchSongs();
 
     } catch (error) {
-      console.log("Upload error:", error.response?.data || error.message);
+      console.log(
+        "Upload error:",
+        error.response?.data || error.message
+      );
 
       setMessage(
         error.response?.data?.message || "Failed to upload song"
       );
-
     } finally {
       setUploading(false);
     }
@@ -193,7 +191,6 @@ function Admin() {
   function handleLogout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-
     navigate("/login", { replace: true });
   }
 
@@ -202,19 +199,16 @@ function Admin() {
 
       {/* HEADER */}
       <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
-
         <div>
           <h1 className="text-3xl font-bold text-green-400">
             Vibe Music Admin
           </h1>
-
           <p className="mt-2 text-gray-400">
             Manage your music library
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-
           <div className="flex items-center gap-2 rounded-lg bg-green-500/10 px-4 py-3 text-green-400">
             <Music2 />
             <span>Admin Dashboard</span>
@@ -222,12 +216,11 @@ function Admin() {
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-3 text-red-400 transition hover:bg-red-500 hover:text-white"
+            className="flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-3 text-red-400 hover:bg-red-500 hover:text-white"
           >
             <LogOut size={20} />
-            <span>Logout</span>
+            Logout
           </button>
-
         </div>
       </div>
 
@@ -240,7 +233,6 @@ function Admin() {
 
       {/* ADD SONG */}
       <div className="mb-10 max-w-2xl rounded-xl bg-gray-900 p-6">
-
         <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
           <Plus className="text-green-400" />
           Add New Song
@@ -277,21 +269,26 @@ function Admin() {
             className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 outline-none focus:border-green-400"
           />
 
-        {/* IMAGE NAME */}
-      <div>
-     <label className="mb-2 block text-gray-300">
-       Album Image Name
-     </label>
+          {/* IMAGE NAME */}
+          <div>
+            <label className="mb-2 block text-gray-300">
+              Album Image Name
+            </label>
 
-    <input
-    type="text"
-    name="image"
-    placeholder="Example: imagename.jpg"
-    value={form.image}
-    onChange={handleChange}
-    className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 outline-none focus:border-green-400"
-    />
-       </div>
+            <input
+              type="text"
+              name="image"
+              placeholder="Example: DC-2026.jpg"
+              value={form.image}
+              onChange={handleChange}
+              required
+              className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 outline-none focus:border-green-400"
+            />
+
+            <p className="mt-2 text-sm text-gray-500">
+              Enter an existing image filename from backend/uploads.
+            </p>
+          </div>
 
           {/* AUDIO UPLOAD */}
           <div>
@@ -319,7 +316,7 @@ function Admin() {
             </label>
           </div>
 
-          {/* UPLOAD PROGRESS */}
+          {/* PROGRESS */}
           {uploading && (
             <div>
               <div className="mb-2 flex justify-between text-sm text-gray-400">
@@ -339,7 +336,7 @@ function Admin() {
           <button
             type="submit"
             disabled={uploading}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-500 p-3 font-semibold text-black hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-500 p-3 font-semibold text-black hover:bg-green-400 disabled:opacity-50"
           >
             <Plus size={20} />
             {uploading ? "Uploading..." : "Add Song"}
@@ -350,7 +347,6 @@ function Admin() {
 
       {/* ALL SONGS */}
       <div className="rounded-xl bg-gray-900 p-6">
-
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-semibold">
             All Songs ({songs.length})
@@ -372,7 +368,6 @@ function Admin() {
           <p className="text-gray-400">No songs available.</p>
         ) : (
           <div className="space-y-3">
-
             {songs.map((song) => (
               <div
                 key={song._id}
@@ -417,11 +412,9 @@ function Admin() {
 
               </div>
             ))}
-
           </div>
         )}
       </div>
-
     </div>
   );
 }
