@@ -27,7 +27,7 @@ function Admin() {
     title: "",
     artist: "",
     album: "",
-    image: "",
+    image: null,
     audio: null
   });
 
@@ -143,7 +143,7 @@ function Admin() {
         title: "",
         artist: "",
         album: "",
-        image: "",
+        image: null,
         audio: null
       });
 
